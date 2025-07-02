@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Chatbot Administrativa OGA</title>
+  <style>
+    body { font-family: Arial; background: #f7f7f7; padding: 20px; }
+    #chatbox { max-width: 500px; margin: auto; background: white; border-radius: 10px; padding: 20px; box-shadow: 0 0 10px #ccc; }
+    .bot, .user { margin: 10px 0; }
+    .bot { color: #333; }
+    .user { text-align: right; color: #2b6cb0; }
+    input[type="text"], select { width: 100%; padding: 8px; margin-top: 5px; }
+    button { margin-top: 10px; padding: 10px; background: #2b6cb0; color: white; border: none; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <div id="chatbox"></div>
+  <script>
+    const steps = [
+      { type: "bot", text: "Buenos días, te comunicaste con el provisto de Administrativa OGA." },
+      { type: "bot", text: "Antes de continuar, por favor indicá tu número de legajo.", field: "legajo" },
+      { type: "bot", text: "Buen día {legajo}, ¿en qué podemos ayudarte?", field: "motivo", options: [
+        "Solicitar parte médico",
+        "Solicitar parte por familiar enfermo",
+        "Solicitar aprobación de licencia/trámite en el portal",
+        "Otras consultas"
+      ]},
+      { type: "bot", text: "¿Qué turno cumplís hoy?", field: "turno", options: ["Matutino", "Vespertino"], condition: data => data.motivo === "Solicitar parte médico" },
+      { type: "bot", text: "Ingresá la fecha del parte médico (DD/MM/AAAA)", field: "fecha", condition: data => data.motivo === "Solicitar parte médico" },
+      { type: "bot", text: "Escribí tu número de celular", field: "celular", condition: data => data.motivo === "Solicitar parte médico" },
+      { type: "bot", text: "Domicilio donde estarás durante la licencia (aclarar si es accidental)", field: "domicilio", condition: data => data.motivo === "Solicitar parte médico" },
+      { type: "bot", text: "¿Estás en condiciones de deambular?", field: "deambula", options: ["Sí", "No"], condition: data => data.motivo === "Solicitar parte médico" },
+      { type: "bot", text: "Describí tus síntomas y/o lesiones", field: "sintomas", condition: data => data.motivo === "Solicitar parte médico" },
+      { type: "bot", text: "¿Solicitás ajuste de procedimiento por discapacidad?", field: "ajuste", options: ["No", "Sí"], condition: data => data.motivo === "Solicitar parte médico" },
+      { type: "bot", text: "Por favor describí el ajuste solicitado", field: "ajuste_texto", condition: data => data.ajuste === "Sí" },
+      { type: "bot", text: "¿Querés agregar alguna observación?", field: "obs", options: ["No agregar", "Agregar"], condition: data => data.motivo === "Solicitar parte médico" },
+      { type: "bot", text: "Escribí la observación", field: "obs_texto", condition: data => data.obs === "Agregar" },
+      { type: "bot", text: "Gracias. Tu solicitud fue registrada. Pronto será procesada." }
+    ];
+
+    const data = {};
+    let stepIndex = 0;
+    const box = document.getElementById("chatbox");
+
+    function nextStep() {
+      while (stepIndex < steps.length) {
+        const step = steps[stepIndex];
+        if (step.condition && !step.condition(data)) {
+          stepIndex++;
+          continue;
+        }
+
+        const message = step.text.replace(/{(\w+)}/g, (_, key) => data[key] || "");
+        box.innerHTML += `<div class="bot">${message}</div>`;
+
+        if (step.options) {
+          const select = document.createElement("select");
+          select.innerHTML = step.options.map(opt => `<option value="${opt}">${opt}</option>`).join("");
+          const button = document.createElement("button");
+          button.textContent = "Responder";
+          button.onclick = () => {
+            const value = select.value;
+            data[step.field] = value;
+            box.innerHTML += `<div class="user">${value}</div>`;
+            stepIndex++;
+            nextStep();
+          };
+          box.appendChild(select);
+          box.appendChild(button);
+          return;
+        }
+
+        if (step.field) {
+          const input = document.createElement("input");
+          input.type = "text";
+          input.placeholder = "Escribí aquí...";
+          const button = document.createElement("button");
+          button.textContent = "Enviar";
+          button.onclick = () => {
+            const value = input.value;
+            data[step.field] = value;
+            box.innerHTML += `<div class="user">${value}</div>`;
+            stepIndex++;
+            nextStep();
+          };
+          box.appendChild(input);
+          box.appendChild(button);
+          return;
+        }
+
+        stepIndex++;
+      }
+    }
+
+    nextStep();
+  </script>
+</body>
+</html>
