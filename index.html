@@ -47,17 +47,21 @@
     function resetForm() {
       data = {};
       stepIndex = 0;
-      box.innerHTML = '';
       nextStep();
     }
 
     function nextStep() {
-      box.innerHTML = '';
       if (stepIndex >= steps.length) return;
 
       const step = steps[stepIndex];
+
+      box.innerHTML = '';  // Limpia todo el chat (pantalla limpia)
       const message = step.text.replace(/{(\w+)}/g, (_, key) => data[key] || "");
       box.innerHTML += `<div class="bot">${message}</div>`;
+
+      const resetButton = document.createElement("button");
+      resetButton.textContent = "Reiniciar formulario";
+      resetButton.onclick = resetForm;
 
       if (step.options) {
         const select = document.createElement("select");
@@ -70,9 +74,6 @@
           stepIndex++;
           nextStep();
         };
-        const resetButton = document.createElement("button");
-        resetButton.textContent = "Reiniciar formulario";
-        resetButton.onclick = resetForm;
         box.appendChild(select);
         box.appendChild(button);
         box.appendChild(resetButton);
@@ -85,9 +86,6 @@
         input.placeholder = "Ingresá tu legajo...";
         const button = document.createElement("button");
         button.textContent = "Enviar";
-        const resetButton = document.createElement("button");
-        resetButton.textContent = "Reiniciar formulario";
-        resetButton.onclick = resetForm;
 
         function enviar() {
           const value = input.value;
@@ -108,6 +106,9 @@
                 nextStep();
               } else {
                 box.innerHTML += `<div class="bot">Legajo no encontrado. Por favor ingresá tu número de legajo que corresponda al personal de OGA Penal Tucumán.</div>`;
+                box.appendChild(input);
+                box.appendChild(button);
+                box.appendChild(resetButton);
               }
             });
         }
@@ -129,9 +130,6 @@
         input.placeholder = "Escribí aquí...";
         const button = document.createElement("button");
         button.textContent = "Enviar";
-        const resetButton = document.createElement("button");
-        resetButton.textContent = "Reiniciar formulario";
-        resetButton.onclick = resetForm;
 
         function enviar() {
           const value = input.value;
@@ -159,6 +157,7 @@
   </script>
 </body>
 </html>
+
 
 
 
