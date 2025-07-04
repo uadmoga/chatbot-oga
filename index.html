@@ -48,8 +48,11 @@
       pedirLegajo();
     }
 
-    function pedirLegajo() {
-      box.innerHTML = `<div class="bot">Buenos días, te comunicaste con el provisto de Administrativa OGA.<br>Antes de continuar, por favor indicá tu número de legajo.</div>`;
+    function pedirLegajo(mensajeError = false) {
+      box.innerHTML = mensajeError 
+        ? `<div class="bot">Legajo no encontrado. Por favor ingresá tu número de legajo que corresponda al personal de OGA Penal Tucumán.</div>`
+        : `<div class="bot">Buenos días, te comunicaste con el provisto de Administrativa OGA.<br>Antes de continuar, por favor indicá tu número de legajo.</div>`;
+      
       const input = document.createElement("input");
       input.type = "text";
       input.placeholder = "Ingresá tu legajo...";
@@ -78,10 +81,7 @@
               stepIndex = 0;
               setTimeout(() => nextStep(), 1000);
             } else {
-              box.innerHTML += `<div class="bot">Legajo no encontrado. Por favor ingresá tu número de legajo que corresponda al personal de OGA Penal Tucumán.</div>`;
-              box.appendChild(input);
-              box.appendChild(button);
-              box.appendChild(resetButton);
+              pedirLegajo(true);
             }
           });
       }
@@ -159,6 +159,7 @@
   </script>
 </body>
 </html>
+
 
 
 
