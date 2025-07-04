@@ -10,7 +10,7 @@
     .bot { color: #333; }
     .user { text-align: right; color: #2b6cb0; }
     input[type="text"], select { width: 100%; padding: 8px; margin-top: 5px; }
-    button { margin-top: 10px; padding: 10px; background: #2b6cb0; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button { margin-top: 10px; padding: 10px; background: #2b6cb0; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px; }
   </style>
 </head>
 <body>
@@ -40,100 +40,126 @@
       { type: "bot", text: "Gracias. Tu solicitud fue registrada. Pronto será procesada." }
     ];
 
-    const data = {};
+    let data = {};
     let stepIndex = 0;
     const box = document.getElementById("chatbox");
 
+    function resetForm() {
+      data = {};
+      stepIndex = 0;
+      box.innerHTML = '';
+      nextStep();
+    }
+
     function nextStep() {
-      while (stepIndex < steps.length) {
-        const step = steps[stepIndex];
-        if (step.condition && !step.condition(data)) {
+      box.innerHTML = '';
+      if (stepIndex >= steps.length) return;
+
+      const step = steps[stepIndex];
+      const message = step.text.replace(/{(\w+)}/g, (_, key) => data[key] || "");
+      box.innerHTML += `<div class="bot">${message}</div>`;
+
+      if (step.options) {
+        const select = document.createElement("select");
+        select.innerHTML = step.options.map(opt => `<option value="${opt}">${opt}</option>`).join("");
+        const button = document.createElement("button");
+        button.textContent = "Responder";
+        button.onclick = () => {
+          const value = select.value;
+          data[step.field] = value;
           stepIndex++;
-          continue;
-        }
+          nextStep();
+        };
+        const resetButton = document.createElement("button");
+        resetButton.textContent = "Reiniciar formulario";
+        resetButton.onclick = resetForm;
+        box.appendChild(select);
+        box.appendChild(button);
+        box.appendChild(resetButton);
+        return;
+      }
 
-        const message = step.text.replace(/{(\w+)}/g, (_, key) => data[key] || "");
-        box.innerHTML += `<div class="bot">${message}</div>`;
+      if (step.field === "legajo") {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = "Ingresá tu legajo...";
+        const button = document.createElement("button");
+        button.textContent = "Enviar";
+        const resetButton = document.createElement("button");
+        resetButton.textContent = "Reiniciar formulario";
+        resetButton.onclick = resetForm;
 
-        if (step.options) {
-          const select = document.createElement("select");
-          select.innerHTML = step.options.map(opt => `<option value="${opt}">${opt}</option>`).join("");
-          const button = document.createElement("button");
-          button.textContent = "Responder";
-          button.onclick = () => {
-            const value = select.value;
-            data[step.field] = value;
-            box.innerHTML += `<div class="user">${value}</div>`;
-            stepIndex++;
-            nextStep();
-          };
-          box.appendChild(select);
-          box.appendChild(button);
-          return;
-        }
+        function enviar() {
+          const value = input.value;
+          data[step.field] = value;
+          fetch(csvUrl)
+            .then(response => response.text())
+            .then(csv => {
+              const rows = csv.split('\n').slice(1);
+              const agentes = rows.map(row => {
+                const [legajo, apellido, nombre] = row.split(',');
+                return { legajo: legajo?.trim(), nombre: nombre?.trim() };
+              });
 
-        if (step.field === "legajo") {
-          const input = document.createElement("input");
-          input.type = "text";
-          input.placeholder = "Ingresá tu legajo...";
-          const button = document.createElement("button");
-          button.textContent = "Enviar";
-          button.onclick = () => {
-            const value = input.value;
-            data[step.field] = value;
-            fetch(csvUrl)
-              .then(response => response.text())
-              .then(csv => {
-                const rows = csv.split('\n').slice(1); // Saltar encabezado
-                const agentes = rows.map(row => {
-                  const [legajo, apellido, nombre] = row.split(',');
-                  return { legajo: legajo?.trim(), nombre: nombre?.trim() };
-                });
-
-                const agente = agentes.find(a => a.legajo === value);
-                if (agente) {
-                  data.nombre = agente.nombre;
-                  box.innerHTML += `<div class="user">${value}</div>`;
-                  box.innerHTML += `<div class="bot">Buen día ${data.nombre}, ¿en qué podemos ayudarte?</div>`;
-                } else {
-                  box.innerHTML += `<div class="user">${value}</div>`;
-                  box.innerHTML += `<div class="bot">Legajo no encontrado.</div>`;
-                }
+              const agente = agentes.find(a => a.legajo === value);
+              if (agente) {
+                data.nombre = agente.nombre;
                 stepIndex++;
                 nextStep();
-              });
-          };
-          box.appendChild(input);
-          box.appendChild(button);
-          return;
+              } else {
+                box.innerHTML += `<div class="bot">Legajo no encontrado. Por favor ingresá tu número de legajo que corresponda al personal de OGA Penal Tucumán.</div>`;
+              }
+            });
         }
 
-        if (step.field) {
-          const input = document.createElement("input");
-          input.type = "text";
-          input.placeholder = "Escribí aquí...";
-          const button = document.createElement("button");
-          button.textContent = "Enviar";
-          button.onclick = () => {
-            const value = input.value;
-            data[step.field] = value;
-            box.innerHTML += `<div class="user">${value}</div>`;
-            stepIndex++;
-            nextStep();
-          };
-          box.appendChild(input);
-          box.appendChild(button);
-          return;
-        }
+        button.onclick = enviar;
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") enviar();
+        });
 
-        stepIndex++;
+        box.appendChild(input);
+        box.appendChild(button);
+        box.appendChild(resetButton);
+        return;
       }
+
+      if (step.field) {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = "Escribí aquí...";
+        const button = document.createElement("button");
+        button.textContent = "Enviar";
+        const resetButton = document.createElement("button");
+        resetButton.textContent = "Reiniciar formulario";
+        resetButton.onclick = resetForm;
+
+        function enviar() {
+          const value = input.value;
+          data[step.field] = value;
+          stepIndex++;
+          nextStep();
+        }
+
+        button.onclick = enviar;
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") enviar();
+        });
+
+        box.appendChild(input);
+        box.appendChild(button);
+        box.appendChild(resetButton);
+        return;
+      }
+
+      stepIndex++;
+      nextStep();
     }
 
     nextStep();
   </script>
 </body>
 </html>
+
 
 
 
