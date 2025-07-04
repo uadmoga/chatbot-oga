@@ -127,6 +127,24 @@
       resetButton.textContent = "Reiniciar formulario";
       resetButton.onclick = resetForm;
 
+      if (step.field === "fecha") {
+        const today = new Date();
+        const fechaHoy = today.toLocaleDateString('es-AR');
+        data[step.field] = fechaHoy;
+        const fechaTexto = document.createElement("div");
+        fechaTexto.textContent = `Fecha registrada automáticamente: ${fechaHoy}`;
+        const button = document.createElement("button");
+        button.textContent = "Continuar";
+        button.onclick = () => {
+          stepIndex++;
+          nextStep();
+        };
+        box.appendChild(fechaTexto);
+        box.appendChild(button);
+        box.appendChild(resetButton);
+        return;
+      }
+
       if (step.options) {
         const select = document.createElement("select");
         select.innerHTML = step.options.map(opt => `<option value="${opt}">${opt}</option>`).join("");
@@ -175,6 +193,7 @@
   </script>
 </body>
 </html>
+
 
 
 
