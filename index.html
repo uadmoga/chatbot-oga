@@ -16,6 +16,8 @@
 <body>
   <div id="chatbox"></div>
   <script>
+    const csvUrl = 'https://raw.githubusercontent.com/uadmoga/chatbot-oga/refs/heads/main/personal.csv';
+
     const steps = [
       { type: "bot", text: "Buenos días, te comunicaste con el provisto de Administrativa OGA." },
       { type: "bot", text: "Antes de continuar, por favor indicá tu número de legajo.", field: "legajo" },
@@ -79,12 +81,24 @@
           button.onclick = () => {
             const value = input.value;
             data[step.field] = value;
-            fetch(`https://chatbot-oga.onrender.com/buscar?legajo=${value}`)
-              .then(response => response.json())
-              .then(result => {
-                data.nombre = result.nombre;
-                box.innerHTML += `<div class="user">${value}</div>`;
-                box.innerHTML += `<div class="bot">Buen día ${data.nombre}, ¿en qué podemos ayudarte?</div>`;
+            fetch(csvUrl)
+              .then(response => response.text())
+              .then(csv => {
+                const rows = csv.split('\n').slice(1); // Saltar encabezado
+                const agentes = rows.map(row => {
+                  const [legajo, apellido, nombre] = row.split(',');
+                  return { legajo: legajo?.trim(), nombre: nombre?.trim() };
+                });
+
+                const agente = agentes.find(a => a.legajo === value);
+                if (agente) {
+                  data.nombre = agente.nombre;
+                  box.innerHTML += `<div class="user">${value}</div>`;
+                  box.innerHTML += `<div class="bot">Buen día ${data.nombre}, ¿en qué podemos ayudarte?</div>`;
+                } else {
+                  box.innerHTML += `<div class="user">${value}</div>`;
+                  box.innerHTML += `<div class="bot">Legajo no encontrado.</div>`;
+                }
                 stepIndex++;
                 nextStep();
               });
@@ -120,6 +134,7 @@
   </script>
 </body>
 </html>
+
 
 
 
