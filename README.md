@@ -1,79 +1,81 @@
 # Chatbot Administrativa OGA - Tucumán
 
-Este proyecto contiene un chatbot web que permite a los agentes de la OGA Penal Tucumán registrar solicitudes de licencias de forma automática, rápida y segura.
+Este proyecto contiene un chatbot web que permite a los agentes de la OGA Penal Tucumán registrar solicitudes de licencias de forma automática, rápida y sencilla.
+
+---
 
 ## ✅ Funcionalidades
-- Chatbot embebido en Google Sites.
+- Chatbot embebido en Google Sites o cualquier página.
 - Consulta automática del nombre del agente a partir del número de legajo.
-- Respuesta ultra rápida mediante API en Python (FastAPI) alojada en Render.com.
-- Base de datos local en formato CSV, fácil de actualizar.
+- El chatbot lee directamente un archivo CSV público almacenado en este mismo repositorio (no usa backend).
+- 100% Gratis, sin Render ni servidores adicionales.
+- Rápido y simple de mantener.
 
 ---
 
-## ✅ Estructura del proyecto
-
-### 📂 Chatbot (frontend)
-- `index.html`  
-  Chatbot en HTML, CSS y JavaScript, embebible en Google Sites mediante iframe.
-
-### 📂 Backend (API en Python)
-- `main.py`  
-  API con FastAPI, consulta el CSV y devuelve el nombre según el legajo.
-- `personal.csv`  
-  Base de datos de ejemplo con legajos, apellidos y nombres.
-- `requirements.txt`  
-  Lista de dependencias para Render:
-
-
+## ✅ Cómo funciona
+1. El agente ingresa su número de legajo en el chatbot.
+2. El chatbot descarga el archivo `personal.csv` directamente desde GitHub.
+3. Busca el legajo en el CSV.
+4. Muestra el nombre del agente si lo encuentra.
+5. Continúa con el flujo de solicitud de licencia.
 
 ---
 
-## ✅ Cómo funciona el flujo
+## ✅ Estructura del Proyecto
+- `index.html` → Chatbot listo para subir a GitHub Pages o incrustar en Google Sites.
+- `personal.csv` → Base de datos con los legajos y nombres de los agentes, separada por comas:
+```csv
+LEGAJO,APELLIDO,NOMBRE
+7170,SALLES,JORGE ALFREDO
+7545,ROSSETTI BERIRO,FEDERICO
+...
+✅ Cómo actualizar la base de personal
+Abrir Google Sheets o Excel.
 
-1. El agente ingresa su legajo en el chatbot.
-2. El chatbot hace una petición a la API (`/buscar?legajo=XXXX`).
-3. La API busca en `personal.csv` el nombre correspondiente.
-4. El chatbot saluda automáticamente al agente con su nombre y continúa el flujo.
+Actualizar la base de personal.
+
+Exportar como CSV (separado por comas, sin comillas).
+
+Subir el nuevo archivo personal.csv a este repositorio.
+
+¡Listo! El chatbot tomará automáticamente la nueva base en la próxima consulta.
+
+✅ URL pública del CSV (utilizada por el chatbot)
+plaintext
+Copiar
+Editar
+https://raw.githubusercontent.com/uadmoga/chatbot-oga/refs/heads/main/personal.csv
+✅ Ventajas de esta solución
+Sin servidores externos ni APIs.
+
+Todo gestionado desde GitHub.
+
+Mantenimiento muy simple.
+
+Accesible solo para quienes tengan acceso al Google Sites (según configuración interna).
+
+✅ Notas adicionales
+Este chatbot es ideal para entornos internos y controlados.
+
+No se recomienda para entornos con datos sensibles o con miles de registros (por rendimiento).
+
+Toda la lógica se ejecuta directamente en el navegador del usuario.
+
+✅ Créditos
+Desarrollado para la Oficina de Gestión Administrativa Penal - Tucumán.
+
+yaml
+Copiar
+Editar
 
 ---
 
-## ✅ Cómo actualizar la base de datos (personal.csv)
-1. Abrir tu Google Sheets con la base de personal.
-2. Descargarla como CSV:
-3. Reemplazar el archivo `personal.csv` en tu repo de GitHub.
-4. Render actualizará automáticamente la app con la nueva base.
+## ✅ Qué hacer ahora:
+1. Copiá el contenido de este README.
+2. Creá el archivo `README.md` en tu repo de GitHub.
+3. Pegalo y hacé **commit**.
 
 ---
 
-## ✅ Cómo desplegar el backend en Render.com
-1. Crear una cuenta en [https://render.com](https://render.com).
-2. Crear un **Web Service** conectando tu repositorio de GitHub.
-3. Configurar:
-- **Build Command:**  
-  ```
-  pip install -r requirements.txt
-  ```
-- **Start Command:**  
-  ```
-  uvicorn main:app --host 0.0.0.0 --port 10000
-  ```
-4. Render asignará una URL pública a tu API.
-
----
-
-## ✅ Cómo integrar el chatbot en Google Sites
-1. Subir el archivo `index.html` a GitHub Pages (o cualquier hosting que permita HTML).
-2. Obtener la URL pública del chatbot.
-3. Incrustarlo en Google Sites mediante **Insertar → Incrustar → URL**.
-
----
-
-## ✅ Notas adicionales
-- Este sistema es muy rápido y no requiere bases de datos externas ni costos.
-- Si necesitás más seguridad, podés agregar autenticación en la API.
-- La base CSV se mantiene en memoria, por lo que es muy eficiente para bases medianas.
-
----
-
-## ✅ Créditos
-Desarrollado por el equipo administrativo de OGA Penal Tucumán con la colaboración de herramientas open-source.
+Si querés, también puedo prepararte un texto para anunciarle al personal que el chatbot ya está activo. ¿Querés que lo arme?
