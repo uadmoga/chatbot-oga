@@ -19,8 +19,6 @@
     const csvUrl = 'https://raw.githubusercontent.com/uadmoga/chatbot-oga/refs/heads/main/personal.csv';
 
     const steps = [
-      { type: "bot", text: "Buenos días, te comunicaste con el provisto de Administrativa OGA." },
-      { type: "bot", text: "Antes de continuar, por favor indicá tu número de legajo.", field: "legajo" },
       { type: "bot", text: "¿En qué podemos ayudarte?", field: "motivo", options: [
         "Solicitar parte médico",
         "Solicitar parte por familiar enfermo",
@@ -41,24 +39,74 @@
     ];
 
     let data = {};
-    let stepIndex = 0;
+    let stepIndex = -1;
     const box = document.getElementById("chatbox");
 
     function resetForm() {
       data = {};
-      stepIndex = 0;
-      nextStep();
+      stepIndex = -1;
+      pedirLegajo();
+    }
+
+    function pedirLegajo() {
+      box.innerHTML = `<div class="bot">Buenos días, te comunicaste con el provisto de Administrativa OGA.<br>Antes de continuar, por favor indicá tu número de legajo.</div>`;
+      const input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = "Ingresá tu legajo...";
+      const button = document.createElement("button");
+      button.textContent = "Enviar";
+      const resetButton = document.createElement("button");
+      resetButton.textContent = "Reiniciar formulario";
+      resetButton.onclick = resetForm;
+
+      function enviar() {
+        const value = input.value;
+        data.legajo = value;
+        fetch(csvUrl)
+          .then(response => response.text())
+          .then(csv => {
+            const rows = csv.split('\n').slice(1);
+            const agentes = rows.map(row => {
+              const [legajo, apellido, nombre] = row.split(',');
+              return { legajo: legajo?.trim(), nombre: nombre?.trim() };
+            });
+
+            const agente = agentes.find(a => a.legajo === value);
+            if (agente) {
+              data.nombre = agente.nombre;
+              box.innerHTML = `<div class="bot">Buen día ${data.nombre}, ¿en qué podemos ayudarte?</div>`;
+              stepIndex = 0;
+              setTimeout(() => nextStep(), 1000);
+            } else {
+              box.innerHTML += `<div class="bot">Legajo no encontrado. Por favor ingresá tu número de legajo que corresponda al personal de OGA Penal Tucumán.</div>`;
+              box.appendChild(input);
+              box.appendChild(button);
+              box.appendChild(resetButton);
+            }
+          });
+      }
+
+      button.onclick = enviar;
+      input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") enviar();
+      });
+
+      box.appendChild(input);
+      box.appendChild(button);
+      box.appendChild(resetButton);
     }
 
     function nextStep() {
       if (stepIndex >= steps.length) return;
 
       const step = steps[stepIndex];
+      if (step.condition && !step.condition(data)) {
+        stepIndex++;
+        nextStep();
+        return;
+      }
 
-      box.innerHTML = '';  // Limpia todo el chat (pantalla limpia)
-      const message = step.text.replace(/{(\w+)}/g, (_, key) => data[key] || "");
-      box.innerHTML += `<div class="bot">${message}</div>`;
-
+      box.innerHTML = `<div class="bot">${step.text}</div>`;
       const resetButton = document.createElement("button");
       resetButton.textContent = "Reiniciar formulario";
       resetButton.onclick = resetForm;
@@ -69,56 +117,11 @@
         const button = document.createElement("button");
         button.textContent = "Responder";
         button.onclick = () => {
-          const value = select.value;
-          data[step.field] = value;
+          data[step.field] = select.value;
           stepIndex++;
           nextStep();
         };
         box.appendChild(select);
-        box.appendChild(button);
-        box.appendChild(resetButton);
-        return;
-      }
-
-      if (step.field === "legajo") {
-        const input = document.createElement("input");
-        input.type = "text";
-        input.placeholder = "Ingresá tu legajo...";
-        const button = document.createElement("button");
-        button.textContent = "Enviar";
-
-        function enviar() {
-          const value = input.value;
-          data[step.field] = value;
-          fetch(csvUrl)
-            .then(response => response.text())
-            .then(csv => {
-              const rows = csv.split('\n').slice(1);
-              const agentes = rows.map(row => {
-                const [legajo, apellido, nombre] = row.split(',');
-                return { legajo: legajo?.trim(), nombre: nombre?.trim() };
-              });
-
-              const agente = agentes.find(a => a.legajo === value);
-              if (agente) {
-                data.nombre = agente.nombre;
-                stepIndex++;
-                nextStep();
-              } else {
-                box.innerHTML += `<div class="bot">Legajo no encontrado. Por favor ingresá tu número de legajo que corresponda al personal de OGA Penal Tucumán.</div>`;
-                box.appendChild(input);
-                box.appendChild(button);
-                box.appendChild(resetButton);
-              }
-            });
-        }
-
-        button.onclick = enviar;
-        input.addEventListener("keydown", (event) => {
-          if (event.key === "Enter") enviar();
-        });
-
-        box.appendChild(input);
         box.appendChild(button);
         box.appendChild(resetButton);
         return;
@@ -130,19 +133,18 @@
         input.placeholder = "Escribí aquí...";
         const button = document.createElement("button");
         button.textContent = "Enviar";
-
-        function enviar() {
-          const value = input.value;
-          data[step.field] = value;
+        button.onclick = () => {
+          data[step.field] = input.value;
           stepIndex++;
           nextStep();
-        }
-
-        button.onclick = enviar;
+        };
         input.addEventListener("keydown", (event) => {
-          if (event.key === "Enter") enviar();
+          if (event.key === "Enter") {
+            data[step.field] = input.value;
+            stepIndex++;
+            nextStep();
+          }
         });
-
         box.appendChild(input);
         box.appendChild(button);
         box.appendChild(resetButton);
@@ -153,10 +155,11 @@
       nextStep();
     }
 
-    nextStep();
+    pedirLegajo();
   </script>
 </body>
 </html>
+
 
 
 
