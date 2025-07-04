@@ -79,7 +79,7 @@
           button.onclick = () => {
             const value = input.value;
             data[step.field] = value;
-            fetch(`https://script.google.com/macros/s/AKfycbxx5cra7qMvh3Kih_qnJfccaL1DBWlXdhiwI3uGyTOucRGFz2367vQ5oFUSzBykj8TH/exec?legajo=${value}`)
+            fetch(`https://chatbot-oga.onrender.com/buscar?legajo=${value}`)
               .then(response => response.json())
               .then(result => {
                 data.nombre = result.nombre;
@@ -120,4 +120,5 @@
   </script>
 </body>
 </html>
+
 
